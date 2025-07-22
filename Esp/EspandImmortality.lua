@@ -138,7 +138,7 @@ newButton.MouseButton1Click:Connect(function()
 		healthLoop = game:GetService("RunService").Heartbeat:Connect(function()
 			local char = localPlayer.Character
 			if char and char:FindFirstChild("Humanoid") then
-				char.Humanoid.Health = 100
+				char.Humanoid.Health = char.Humanoid.MaxHealth
 			end
 		end)
 	end
