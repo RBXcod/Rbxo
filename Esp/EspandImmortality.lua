@@ -1,16 +1,26 @@
+--[[
+ ✅ GUI с ESP, бесконечным ХП и Aimbot с FOV-кругом и проверкой на стены
+--]]
+
+-- Переменные
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
 -- Создание GUI
 local gui = Instance.new("ScreenGui", game.CoreGui)
-gu.Name = "MyCheatGUI"
+gui.Name = "MyCheatGUI"
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 250, 0, 300)
+frame.Size = UDim2.new(0, 250, 0, 320)
 frame.Position = UDim2.new(0, 20, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
 frame.Active = true
 frame.Draggable = true
 
--- Заголовок
 local title = Instance.new("TextLabel", frame)
 title.Text = "Чит-меню"
 title.Size = UDim2.new(1, -60, 0, 30)
@@ -21,7 +31,6 @@ title.Font = Enum.Font.SourceSansBold
 title.TextSize = 20
 title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Кнопка ×
 local closeBtn = Instance.new("TextButton", frame)
 closeBtn.Text = "❌"
 closeBtn.Size = UDim2.new(0, 25, 0, 25)
@@ -31,14 +40,12 @@ closeBtn.TextColor3 = Color3.new(1, 1, 1)
 closeBtn.Font = Enum.Font.SourceSansBold
 closeBtn.TextSize = 16
 closeBtn.MouseButton1Click:Connect(function()
-	title:Destroy()
-	frame:Destroy()
 	gui:Destroy()
 end)
 
 -- Кнопка свернуть
 local toggleBtn = Instance.new("TextButton", frame)
-toggleBtn.Text = "🕽"
+toggleBtn.Text = "🔽"
 toggleBtn.Size = UDim2.new(0, 25, 0, 25)
 toggleBtn.Position = UDim2.new(1, -60, 0, 2)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
@@ -46,9 +53,7 @@ toggleBtn.TextColor3 = Color3.new(1, 1, 1)
 toggleBtn.Font = Enum.Font.SourceSansBold
 toggleBtn.TextSize = 16
 
--- Контейнер содержимого
 local content = Instance.new("Frame", frame)
-content.Name = "Content"
 content.Position = UDim2.new(0, 0, 0, 35)
 content.Size = UDim2.new(1, 0, 1, -35)
 content.BackgroundTransparency = 1
@@ -62,35 +67,12 @@ toggleBtn.MouseButton1Click:Connect(function()
 		toggleBtn.Text = "🔼"
 	else
 		content.Visible = true
-		frame.Size = UDim2.new(0, 250, 0, 300)
-		toggleBtn.Text = "🕽"
+		frame.Size = UDim2.new(0, 250, 0, 320)
+		toggleBtn.Text = "🔽"
 	end
 end)
 
--- Визуальный круг прицела
-local aimCircle = Instance.new("Frame", gui)
-aimCircle.Size = UDim2.new(0, 150, 0, 150)
-aimCircle.Position = UDim2.new(0.5, -75, 0.5, -75)
-aimCircle.AnchorPoint = Vector2.new(0.5, 0.5)
-aimCircle.BackgroundTransparency = 1
-
-local circle = Instance.new("ImageLabel", aimCircle)
-circle.Size = UDim2.new(1, 0, 1, 0)
-circle.BackgroundTransparency = 1
-circle.Image = "rbxassetid://3570695787"
-circle.ImageColor3 = Color3.new(1, 0, 0)
-circle.ImageTransparency = 0.4
-circle.ScaleType = Enum.ScaleType.Fit
-
-local localPlayer = game:GetService("Players").LocalPlayer
-local radius = 75
-
-local function updateCircleSize()
-	aimCircle.Size = UDim2.new(0, radius * 2, 0, radius * 2)
-	aimCircle.Position = UDim2.new(0.5, -radius, 0.5, -radius)
-end
-
--- Кнопка ESP
+-- ESP
 local espButton = Instance.new("TextButton", content)
 espButton.Text = "Включить ESP"
 espButton.Size = UDim2.new(0, 200, 0, 40)
@@ -105,11 +87,10 @@ local espConnection
 espButton.MouseButton1Click:Connect(function()
 	espActive = not espActive
 	espButton.Text = espActive and "Выключить ESP" or "Включить ESP"
-
 	if espActive then
-		espConnection = game:GetService("RunService").RenderStepped:Connect(function()
-			for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-				if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character:FindFirstChild("Head") then
+		espConnection = RunService.RenderStepped:Connect(function()
+			for _, player in ipairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") then
 					if not player.Character:FindFirstChild("ESPBox") then
 						local adorn = Instance.new("BoxHandleAdornment")
 						adorn.Name = "ESPBox"
@@ -126,7 +107,7 @@ espButton.MouseButton1Click:Connect(function()
 		end)
 	else
 		if espConnection then espConnection:Disconnect() end
-		for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+		for _, player in ipairs(Players:GetPlayers()) do
 			if player.Character and player.Character:FindFirstChild("ESPBox") then
 				player.Character.ESPBox:Destroy()
 			end
@@ -144,111 +125,87 @@ hpButton.TextColor3 = Color3.new(1, 1, 1)
 hpButton.Font = Enum.Font.SourceSansBold
 hpButton.TextSize = 16
 
-local running = false
-local healthLoop
+local hpLoop
+local hpRunning = false
 hpButton.MouseButton1Click:Connect(function()
-	running = not running
-	hpButton.Text = running and "Выкл. ХП" or "Бесконечное ХП"
-	if running then
-		healthLoop = game:GetService("RunService").Heartbeat:Connect(function()
-			local char = localPlayer.Character
+	hpRunning = not hpRunning
+	hpButton.Text = hpRunning and "Выключить ХП" or "Бесконечное ХП"
+	if hpRunning then
+		hpLoop = RunService.Heartbeat:Connect(function()
+			local char = LocalPlayer.Character
 			if char and char:FindFirstChild("Humanoid") then
 				char.Humanoid.Health = char.Humanoid.MaxHealth
 			end
 		end)
 	else
-		if healthLoop then healthLoop:Disconnect() end
+		if hpLoop then hpLoop:Disconnect() end
 	end
 end)
 
 -- Aimbot
-local aimButton = Instance.new("TextButton", content)
-aimButton.Text = "Включить Aimbot"
-aimButton.Size = UDim2.new(0, 200, 0, 40)
-aimButton.Position = UDim2.new(0.5, -100, 0, 110)
-aimButton.BackgroundColor3 = Color3.fromRGB(100, 80, 80)
-aimButton.TextColor3 = Color3.new(1, 1, 1)
-aimButton.Font = Enum.Font.SourceSansBold
-aimButton.TextSize = 16
+local aimbotEnabled = false
+local aimbotRadius = 100
 
-local aimEnabled = false
-local aimLoop
+-- Кнопка Aimbot
+local aimbotBtn = Instance.new("TextButton", content)
+aimbotBtn.Text = "Включить Aimbot"
+aimbotBtn.Size = UDim2.new(0, 200, 0, 40)
+aimbotBtn.Position = UDim2.new(0.5, -100, 0, 110)
+aimbotBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+aimbotBtn.TextColor3 = Color3.new(1, 1, 1)
+aimbotBtn.Font = Enum.Font.SourceSansBold
+aimbotBtn.TextSize = 16
+
+-- Aimbot FOV круг
+local fovCircle = Drawing.new("Circle")
+fovCircle.Color = Color3.fromRGB(0, 255, 0)
+fovCircle.Thickness = 1
+fovCircle.Radius = aimbotRadius
+fovCircle.NumSides = 64
+fovCircle.Transparency = 0.4
+fovCircle.Filled = false
+fovCircle.Visible = true
+
+RunService.RenderStepped:Connect(function()
+	fovCircle.Position = UserInputService:GetMouseLocation()
+end)
 
 local function getClosestPlayer()
-	local camera = workspace.CurrentCamera
-	local closestPlayer = nil
-	local shortestDistance = radius
-
-	for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
-		if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
+	local closest, shortest = nil, aimbotRadius
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
 			local head = player.Character.Head
-			local headPos, onScreen = camera:WorldToViewportPoint(head.Position)
+			local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
 			if onScreen then
-				local screenPos = Vector2.new(headPos.X, headPos.Y)
-				local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-				local dist = (screenPos - screenCenter).Magnitude
-				if dist < shortestDistance then
-					local rayOrigin = camera.CFrame.Position
-					local direction = (head.Position - rayOrigin).Unit * 500
-					local params = RaycastParams.new()
-					params.FilterDescendantsInstances = {localPlayer.Character}
-					params.FilterType = Enum.RaycastFilterType.Blacklist
-					params.IgnoreWater = true
-					local result = workspace:Raycast(rayOrigin, direction, params)
-					if result and result.Instance and result.Instance:IsDescendantOf(player.Character) then
-						shortestDistance = dist
-						closestPlayer = player
+				local dist = (Vector2.new(screenPos.X, screenPos.Y) - UserInputService:GetMouseLocation()).Magnitude
+				if dist < shortest then
+					-- Проверка на стены
+					local ray = workspace:Raycast(Camera.CFrame.Position, (head.Position - Camera.CFrame.Position).Unit * 1000, RaycastParams.new({
+						FilterDescendantsInstances = {LocalPlayer.Character},
+						FilterType = Enum.RaycastFilterType.Blacklist,
+						IgnoreWater = true
+					}))
+					if ray and ray.Instance and ray.Instance:IsDescendantOf(player.Character) then
+						closest, shortest = player, dist
 					end
 				end
 			end
 		end
 	end
-	return closestPlayer
+	return closest
 end
 
-aimButton.MouseButton1Click:Connect(function()
-	aimEnabled = not aimEnabled
-	aimButton.Text = aimEnabled and "Выключить Aimbot" or "Включить Aimbot"
-	if aimEnabled then
-		aimLoop = game:GetService("RunService").RenderStepped:Connect(function()
-			local target = getClosestPlayer()
-			if target and target.Character and target.Character:FindFirstChild("Head") then
-				workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, target.Character.Head.Position)
-			end
-		end)
-	else
-		if aimLoop then aimLoop:Disconnect() end
+RunService.RenderStepped:Connect(function()
+	if aimbotEnabled then
+		local target = getClosestPlayer()
+		if target and target.Character and target.Character:FindFirstChild("Head") then
+			Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
+		end
 	end
 end)
 
--- Кнопки регулировки круга
-local plusBtn = Instance.new("TextButton", content)
-plusBtn.Text = "➕"
-plusBtn.Size = UDim2.new(0, 40, 0, 40)
-plusBtn.Position = UDim2.new(0.5, -100, 0, 160)
-plusBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-plusBtn.TextColor3 = Color3.new(1, 1, 1)
-plusBtn.Font = Enum.Font.SourceSansBold
-plusBtn.TextSize = 18
-
-local minusBtn = Instance.new("TextButton", content)
-minusBtn.Text = "➖"
-minusBtn.Size = UDim2.new(0, 40, 0, 40)
-minusBtn.Position = UDim2.new(0.5, 60, 0, 160)
-minusBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-minusBtn.TextColor3 = Color3.new(1, 1, 1)
-minusBtn.Font = Enum.Font.SourceSansBold
-minusBtn.TextSize = 18
-
-plusBtn.MouseButton1Click:Connect(function()
-	radius = math.min(radius + 10, 300)
-	updateCircleSize()
+aimbotBtn.MouseButton1Click:Connect(function()
+	aimbotEnabled = not aimbotEnabled
+	aimbotBtn.Text = aimbotEnabled and "Выключить Aimbot" or "Включить Aimbot"
+	fovCircle.Visible = aimbotEnabled
 end)
-
-minusBtn.MouseButton1Click:Connect(function()
-	radius = math.max(radius - 10, 20)
-	updateCircleSize()
-end)
-
--- Инициализация круга
-updateCircleSize()
