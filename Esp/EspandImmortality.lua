@@ -1,20 +1,16 @@
---[[
- ✅ GUI с ESP, бесконечным ХП и Aimbot с FOV-кругом и проверкой на стены
---]]
-
--- Переменные
+-- Сервисы
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Создание GUI
+-- GUI
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "MyCheatGUI"
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 250, 0, 320)
+frame.Size = UDim2.new(0, 250, 0, 370)
 frame.Position = UDim2.new(0, 20, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
@@ -43,7 +39,6 @@ closeBtn.MouseButton1Click:Connect(function()
 	gui:Destroy()
 end)
 
--- Кнопка свернуть
 local toggleBtn = Instance.new("TextButton", frame)
 toggleBtn.Text = "🔽"
 toggleBtn.Size = UDim2.new(0, 25, 0, 25)
@@ -67,7 +62,7 @@ toggleBtn.MouseButton1Click:Connect(function()
 		toggleBtn.Text = "🔼"
 	else
 		content.Visible = true
-		frame.Size = UDim2.new(0, 250, 0, 320)
+		frame.Size = UDim2.new(0, 250, 0, 370)
 		toggleBtn.Text = "🔽"
 	end
 end)
@@ -146,7 +141,6 @@ end)
 local aimbotEnabled = false
 local aimbotRadius = 100
 
--- Кнопка Aimbot
 local aimbotBtn = Instance.new("TextButton", content)
 aimbotBtn.Text = "Включить Aimbot"
 aimbotBtn.Size = UDim2.new(0, 200, 0, 40)
@@ -156,7 +150,6 @@ aimbotBtn.TextColor3 = Color3.new(1, 1, 1)
 aimbotBtn.Font = Enum.Font.SourceSansBold
 aimbotBtn.TextSize = 16
 
--- Aimbot FOV круг
 local fovCircle = Drawing.new("Circle")
 fovCircle.Color = Color3.fromRGB(0, 255, 0)
 fovCircle.Thickness = 1
@@ -164,10 +157,10 @@ fovCircle.Radius = aimbotRadius
 fovCircle.NumSides = 64
 fovCircle.Transparency = 0.4
 fovCircle.Filled = false
-fovCircle.Visible = true
+fovCircle.Visible = false
 
 RunService.RenderStepped:Connect(function()
-	fovCircle.Position = UserInputService:GetMouseLocation()
+	fovCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 end)
 
 local function getClosestPlayer()
@@ -177,16 +170,17 @@ local function getClosestPlayer()
 			local head = player.Character.Head
 			local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
 			if onScreen then
-				local dist = (Vector2.new(screenPos.X, screenPos.Y) - UserInputService:GetMouseLocation()).Magnitude
+				local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)).Magnitude
 				if dist < shortest then
 					-- Проверка на стены
-					local ray = workspace:Raycast(Camera.CFrame.Position, (head.Position - Camera.CFrame.Position).Unit * 1000, RaycastParams.new({
-						FilterDescendantsInstances = {LocalPlayer.Character},
-						FilterType = Enum.RaycastFilterType.Blacklist,
-						IgnoreWater = true
-					}))
-					if ray and ray.Instance and ray.Instance:IsDescendantOf(player.Character) then
-						closest, shortest = player, dist
+					local raycastParams = RaycastParams.new()
+					raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+					raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+					raycastParams.IgnoreWater = true
+					local raycastResult = workspace:Raycast(Camera.CFrame.Position, (head.Position - Camera.CFrame.Position).Unit * 1000, raycastParams)
+					if raycastResult and raycastResult.Instance and raycastResult.Instance:IsDescendantOf(player.Character) then
+						closest = player
+						shortest = dist
 					end
 				end
 			end
@@ -208,4 +202,22 @@ aimbotBtn.MouseButton1Click:Connect(function()
 	aimbotEnabled = not aimbotEnabled
 	aimbotBtn.Text = aimbotEnabled and "Выключить Aimbot" or "Включить Aimbot"
 	fovCircle.Visible = aimbotEnabled
+end)
+
+local radiusButton = Instance.new("TextButton", content)
+radiusButton.Text = "Радиус: "..aimbotRadius
+radiusButton.Size = UDim2.new(0, 200, 0, 40)
+radiusButton.Position = UDim2.new(0.5, -100, 0, 160)
+radiusButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+radiusButton.TextColor3 = Color3.new(1, 1, 1)
+radiusButton.Font = Enum.Font.SourceSansBold
+radiusButton.TextSize = 16
+
+radiusButton.MouseButton1Click:Connect(function()
+	aimbotRadius = aimbotRadius + 25
+	if aimbotRadius > 300 then
+		aimbotRadius = 50
+	end
+	fovCircle.Radius = aimbotRadius
+	radiusButton.Text = "Радиус: "..aimbotRadius
 end)
