@@ -66,6 +66,9 @@ toggleBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
+-- Получаем игрока
+local localPlayer = game:GetService("Players").LocalPlayer
+
 -- Кнопка ESP
 local espButton = Instance.new("TextButton", content)
 espButton.Text = "Включить ESP"
@@ -79,7 +82,6 @@ espButton.TextSize = 16
 -- ESP логика
 local espActive = false
 local espConnection
-local localPlayer = game:GetService("Players").LocalPlayer
 
 espButton.MouseButton1Click:Connect(function()
 	espActive = not espActive
@@ -113,7 +115,7 @@ espButton.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Вторая кнопка (например: бесконечное здоровье)
+-- Кнопка бесконечного ХП
 local newButton = Instance.new("TextButton", content)
 newButton.Text = "Бесконечное ХП"
 newButton.Size = UDim2.new(0, 200, 0, 40)
@@ -123,7 +125,7 @@ newButton.TextColor3 = Color3.new(1, 1, 1)
 newButton.Font = Enum.Font.SourceSansBold
 newButton.TextSize = 16
 
--- При нажатии - ХП всегда 100
+-- Бесконечное здоровье
 local running = false
 local healthLoop
 
@@ -141,5 +143,61 @@ newButton.MouseButton1Click:Connect(function()
 				char.Humanoid.Health = char.Humanoid.MaxHealth
 			end
 		end)
+	end
+end)
+
+-- Кнопка Aimbot (для Delta)
+local aimButton = Instance.new("TextButton", content)
+aimButton.Text = "Включить Aimbot"
+aimButton.Size = UDim2.new(0, 200, 0, 40)
+aimButton.Position = UDim2.new(0.5, -100, 0, 110)
+aimButton.BackgroundColor3 = Color3.fromRGB(100, 80, 80)
+aimButton.TextColor3 = Color3.new(1, 1, 1)
+aimButton.Font = Enum.Font.SourceSansBold
+aimButton.TextSize = 16
+
+-- Aimbot логика (работает в Delta)
+local aimEnabled = false
+local aimLoop
+local radius = 150
+
+local function getClosestPlayer()
+	local camera = workspace.CurrentCamera
+	local closestPlayer = nil
+	local shortestDistance = radius
+
+	for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+		if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
+			local headPos, onScreen = camera:WorldToViewportPoint(player.Character.Head.Position)
+			if onScreen then
+				local screenPos = Vector2.new(headPos.X, headPos.Y)
+				local screenCenter = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+				local dist = (screenPos - screenCenter).Magnitude
+
+				if dist < shortestDistance then
+					shortestDistance = dist
+					closestPlayer = player
+				end
+			end
+		end
+	end
+
+	return closestPlayer
+end
+
+aimButton.MouseButton1Click:Connect(function()
+	aimEnabled = not aimEnabled
+	aimButton.Text = aimEnabled and "Выключить Aimbot" or "Включить Aimbot"
+
+	if aimEnabled then
+		aimLoop = game:GetService("RunService").RenderStepped:Connect(function()
+			local target = getClosestPlayer()
+			if target and target.Character and target.Character:FindFirstChild("Head") then
+				local head = target.Character.Head.Position
+				workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, head)
+			end
+		end)
+	else
+		if aimLoop then aimLoop:Disconnect() end
 	end
 end)
