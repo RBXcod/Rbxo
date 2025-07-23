@@ -101,7 +101,7 @@ local aiming = false
 local radius = 80
 
 local circle = Drawing.new("Circle")
-circle.Position = Vector2.new(600, 300)
+circle.Position = Vector2.new(580, 300)
 circle.Radius = radius
 circle.Color = Color3.fromRGB(255, 0, 0)
 circle.Visible = true
