@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
@@ -14,9 +13,42 @@ mainFrame.Position = UDim2.new(0, 30, 0, 100)
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BorderSizePixel = 0
 
+-- Top bar with close/minimize
+local topBar = Instance.new("Frame", mainFrame)
+topBar.Size = UDim2.new(1, 0, 0, 25)
+topBar.Position = UDim2.new(0, 0, 0, 0)
+topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+
+local closeBtn = Instance.new("TextButton", topBar)
+closeBtn.Size = UDim2.new(0, 25, 0, 25)
+closeBtn.Position = UDim2.new(1, -25, 0, 0)
+closeBtn.Text = "X"
+closeBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
+
+local minimizeBtn = Instance.new("TextButton", topBar)
+minimizeBtn.Size = UDim2.new(0, 25, 0, 25)
+minimizeBtn.Position = UDim2.new(1, -50, 0, 0)
+minimizeBtn.Text = "_"
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 255)
+minimizeBtn.TextColor3 = Color3.new(1, 1, 1)
+
+local minimized = false
+minimizeBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	for _, child in pairs(mainFrame:GetChildren()) do
+		if child ~= topBar and not child:IsA("UIStroke") then
+			child.Visible = not minimized
+		end
+	end
+end)
+
 local tabButtonsFrame = Instance.new("Frame", mainFrame)
 tabButtonsFrame.Size = UDim2.new(1, 0, 0, 30)
-tabButtonsFrame.Position = UDim2.new(0, 0, 0, 0)
+tabButtonsFrame.Position = UDim2.new(0, 0, 0, 25)
 tabButtonsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 
 local function createTabButton(name, xPosition)
@@ -31,14 +63,14 @@ local function createTabButton(name, xPosition)
 end
 
 local mainTab = Instance.new("Frame", mainFrame)
-mainTab.Size = UDim2.new(1, 0, 1, -30)
-mainTab.Position = UDim2.new(0, 0, 0, 30)
+mainTab.Size = UDim2.new(1, 0, 1, -55)
+mainTab.Position = UDim2.new(0, 0, 0, 55)
 mainTab.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainTab.Visible = true
 
 local extraTab = Instance.new("Frame", mainFrame)
-extraTab.Size = UDim2.new(1, 0, 1, -30)
-extraTab.Position = UDim2.new(0, 0, 0, 30)
+extraTab.Size = UDim2.new(1, 0, 1, -55)
+extraTab.Position = UDim2.new(0, 0, 0, 55)
 extraTab.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 extraTab.Visible = false
 
@@ -65,10 +97,7 @@ circle.Thickness = 1
 circle.Color = Color3.fromRGB(255, 255, 255)
 circle.Radius = radius
 circle.Filled = false
-
-RunService.RenderStepped:Connect(function()
-	circle.Position = UIS:GetMouseLocation()
-end)
+circle.Position = Vector2.new(500, 300) -- фиксированное положение
 
 function getClosestTarget()
 	local closest = nil
@@ -77,7 +106,7 @@ function getClosestTarget()
 		if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("Head") and plr.Character.Humanoid.Health > 0 then
 			local pos, onScreen = Camera:WorldToScreenPoint(plr.Character.Head.Position)
 			if onScreen then
-				local diff = (Vector2.new(pos.X, pos.Y) - UIS:GetMouseLocation()).Magnitude
+				local diff = (Vector2.new(pos.X, pos.Y) - circle.Position).Magnitude
 				if diff < dist then
 					local ray = Ray.new(Camera.CFrame.Position, (plr.Character.Head.Position - Camera.CFrame.Position).Unit * 1000)
 					local hit = workspace:FindPartOnRay(ray, LocalPlayer.Character, true, false)
@@ -101,7 +130,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- Main tab buttons
+-- Utility
 local function createButton(text, parent, callback, posY)
 	local btn = Instance.new("TextButton", parent)
 	btn.Text = text
@@ -113,6 +142,7 @@ local function createButton(text, parent, callback, posY)
 	btn.MouseButton1Click:Connect(callback)
 end
 
+-- Main tab buttons
 createButton("Aimbot вкл/выкл", mainTab, function()
 	aiming = not aiming
 end, 10)
@@ -131,7 +161,7 @@ createButton("Круг -", mainTab, function()
 	circle.Radius = radius
 end, 130)
 
--- Extra tab functions
+-- Extra tab buttons
 local walkSpeed = 16
 local jumpPower = 50
 local fly = false
