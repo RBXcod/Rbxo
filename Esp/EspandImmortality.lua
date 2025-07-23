@@ -1,143 +1,189 @@
 local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
+local UIS = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
 
-local localPlayer = Players.LocalPlayer
-local camera = Workspace.CurrentCamera
-
-local aimbotActive = false
-local circleVisible = true
-local radius = 100
-
--- GUI
 local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "Cheatmenu"
+gui.Name = "CheatGUI"
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 250, 0, 200)
-frame.Position = UDim2.new(0, 20, 0, 100)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.BorderSizePixel = 0
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 300, 0, 350)
+mainFrame.Position = UDim2.new(0, 30, 0, 100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.BorderSizePixel = 0
 
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 30)
-title.Position = UDim2.new(0, 0, 0, 0)
-title.BackgroundTransparency = 1
-title.Text = "Cheat menu"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 20
+local tabButtonsFrame = Instance.new("Frame", mainFrame)
+tabButtonsFrame.Size = UDim2.new(1, 0, 0, 30)
+tabButtonsFrame.Position = UDim2.new(0, 0, 0, 0)
+tabButtonsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 
-local toggleAimbot = Instance.new("TextButton", frame)
-toggleAimbot.Size = UDim2.new(1, -20, 0, 30)
-toggleAimbot.Position = UDim2.new(0, 10, 0, 40)
-toggleAimbot.Text = "Вкл/Выкл Aimbot"
-toggleAimbot.BackgroundColor3 = Color3.fromRGB(50, 100, 50)
-toggleAimbot.TextColor3 = Color3.new(1, 1, 1)
-toggleAimbot.Font = Enum.Font.SourceSansBold
-toggleAimbot.TextSize = 18
-toggleAimbot.MouseButton1Click:Connect(function()
-	aimbotActive = not aimbotActive
-end)
-
-local toggleCircle = Instance.new("TextButton", frame)
-toggleCircle.Size = UDim2.new(1, -20, 0, 30)
-toggleCircle.Position = UDim2.new(0, 10, 0, 80)
-toggleCircle.Text = "Показать/Скрыть Круг"
-toggleCircle.BackgroundColor3 = Color3.fromRGB(100, 50, 50)
-toggleCircle.TextColor3 = Color3.new(1, 1, 1)
-toggleCircle.Font = Enum.Font.SourceSansBold
-toggleCircle.TextSize = 18
-toggleCircle.MouseButton1Click:Connect(function()
-	circleVisible = not circleVisible
-end)
-
-local increaseBtn = Instance.new("TextButton", frame)
-increaseBtn.Size = UDim2.new(0.5, -15, 0, 30)
-increaseBtn.Position = UDim2.new(0, 10, 0, 120)
-increaseBtn.Text = "+"
-increaseBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
-increaseBtn.TextColor3 = Color3.new(1, 1, 1)
-increaseBtn.Font = Enum.Font.SourceSansBold
-increaseBtn.TextSize = 24
-increaseBtn.MouseButton1Click:Connect(function()
-	radius = radius + 10
-end)
-
-local decreaseBtn = Instance.new("TextButton", frame)
-decreaseBtn.Size = UDim2.new(0.5, -15, 0, 30)
-decreaseBtn.Position = UDim2.new(0.5, 5, 0, 120)
-decreaseBtn.Text = "-"
-decreaseBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-decreaseBtn.TextColor3 = Color3.new(1, 1, 1)
-decreaseBtn.Font = Enum.Font.SourceSansBold
-decreaseBtn.TextSize = 24
-decreaseBtn.MouseButton1Click:Connect(function()
-	radius = math.max(10, radius - 10)
-end)
-
-local circle = Instance.new("Frame", gui)
-circle.Size = UDim2.new(0, radius * 2, 0, radius * 2)
-circle.AnchorPoint = Vector2.new(0.5, 0.5)
-circle.Position = UDim2.new(0.5, 0, 0.5, 0)
-circle.BackgroundTransparency = 1
-
-local uicorner = Instance.new("UICorner", circle)
-uicorner.CornerRadius = UDim.new(1, 0)
-
-local circleOutline = Instance.new("ImageLabel", circle)
-circleOutline.Size = UDim2.new(1, 0, 1, 0)
-circleOutline.Position = UDim2.new(0, 0, 0, 0)
-circleOutline.BackgroundTransparency = 1
-circleOutline.Image = "rbxassetid://3570695787"
-circleOutline.ImageColor3 = Color3.new(0, 1, 0)
-circleOutline.ScaleType = Enum.ScaleType.Slice
-circleOutline.SliceCenter = Rect.new(100, 100, 100, 100)
-
-local function updateCircle()
-	circle.Size = UDim2.new(0, radius * 2, 0, radius * 2)
+local function createTabButton(name, xPosition)
+	local btn = Instance.new("TextButton", tabButtonsFrame)
+	btn.Text = name
+	btn.Size = UDim2.new(0.5, 0, 1, 0)
+	btn.Position = UDim2.new(xPosition, 0, 0, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.BorderSizePixel = 0
+	return btn
 end
 
-local function getClosestTarget()
-	local closestTarget = nil
-	local shortestDistance = radius
+local mainTab = Instance.new("Frame", mainFrame)
+mainTab.Size = UDim2.new(1, 0, 1, -30)
+mainTab.Position = UDim2.new(0, 0, 0, 30)
+mainTab.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainTab.Visible = true
 
-	for _, player in pairs(Players:GetPlayers()) do
-		if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 and player.Character:FindFirstChild("Head") then
-			local head = player.Character.Head
-			local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
+local extraTab = Instance.new("Frame", mainFrame)
+extraTab.Size = UDim2.new(1, 0, 1, -30)
+extraTab.Position = UDim2.new(0, 0, 0, 30)
+extraTab.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+extraTab.Visible = false
+
+local btnMain = createTabButton("Главная", 0)
+local btnExtra = createTabButton("Улучшения", 0.5)
+
+btnMain.MouseButton1Click:Connect(function()
+	mainTab.Visible = true
+	extraTab.Visible = false
+end)
+
+btnExtra.MouseButton1Click:Connect(function()
+	mainTab.Visible = false
+	extraTab.Visible = true
+end)
+
+-- Aimbot
+local aiming = false
+local radius = 100
+local circle = Drawing.new("Circle")
+circle.Visible = true
+circle.Transparency = 1
+circle.Thickness = 1
+circle.Color = Color3.fromRGB(255, 255, 255)
+circle.Radius = radius
+circle.Filled = false
+
+RunService.RenderStepped:Connect(function()
+	circle.Position = UIS:GetMouseLocation()
+end)
+
+function getClosestTarget()
+	local closest = nil
+	local dist = radius
+	for _, plr in pairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("Head") and plr.Character.Humanoid.Health > 0 then
+			local pos, onScreen = Camera:WorldToScreenPoint(plr.Character.Head.Position)
 			if onScreen then
-				local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-				local distance = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-
-				if distance <= radius then
-					local rayParams = RaycastParams.new()
-					rayParams.FilterDescendantsInstances = {localPlayer.Character}
-					rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-					local rayResult = Workspace:Raycast(camera.CFrame.Position, (head.Position - camera.CFrame.Position).Unit * 500, rayParams)
-
-					if rayResult and rayResult.Instance:IsDescendantOf(player.Character) then
-						if distance < shortestDistance then
-							shortestDistance = distance
-							closestTarget = head
-						end
-					end
+				local diff = (Vector2.new(pos.X, pos.Y) - UIS:GetMouseLocation()).Magnitude
+				if diff < dist then
+					local ray = Ray.new(Camera.CFrame.Position, (plr.Character.Head.Position - Camera.CFrame.Position).Unit * 1000)
+					local hit = workspace:FindPartOnRay(ray, LocalPlayer.Character, true, false)
+					if hit and not hit:IsDescendantOf(plr.Character) then continue end
+					closest = plr
+					dist = diff
 				end
 			end
 		end
 	end
-
-	return closestTarget
+	return closest
 end
 
 RunService.RenderStepped:Connect(function()
-	updateCircle()
-	circle.Visible = circleVisible
-
-	if aimbotActive then
+	if aiming then
 		local target = getClosestTarget()
 		if target then
-			camera.CFrame = CFrame.new(camera.CFrame.Position, target.Position)
+			local headPos = target.Character.Head.Position
+			Camera.CFrame = CFrame.new(Camera.CFrame.Position, headPos)
 		end
 	end
 end)
+
+-- Main tab buttons
+local function createButton(text, parent, callback, posY)
+	local btn = Instance.new("TextButton", parent)
+	btn.Text = text
+	btn.Size = UDim2.new(1, -20, 0, 30)
+	btn.Position = UDim2.new(0, 10, 0, posY)
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.BorderSizePixel = 0
+	btn.MouseButton1Click:Connect(callback)
+end
+
+createButton("Aimbot вкл/выкл", mainTab, function()
+	aiming = not aiming
+end, 10)
+
+createButton("Показать/Скрыть круг", mainTab, function()
+	circle.Visible = not circle.Visible
+end, 50)
+
+createButton("Круг +", mainTab, function()
+	radius = radius + 10
+	circle.Radius = radius
+end, 90)
+
+createButton("Круг -", mainTab, function()
+	radius = math.max(10, radius - 10)
+	circle.Radius = radius
+end, 130)
+
+-- Extra tab functions
+local walkSpeed = 16
+local jumpPower = 50
+local fly = false
+local noclip = false
+
+createButton("Скорость +", extraTab, function()
+	walkSpeed = walkSpeed + 10
+	LocalPlayer.Character.Humanoid.WalkSpeed = walkSpeed
+end, 10)
+
+createButton("Скорость -", extraTab, function()
+	walkSpeed = math.max(10, walkSpeed - 10)
+	LocalPlayer.Character.Humanoid.WalkSpeed = walkSpeed
+end, 50)
+
+createButton("Прыжок +", extraTab, function()
+	jumpPower = jumpPower + 10
+	LocalPlayer.Character.Humanoid.JumpPower = jumpPower
+end, 90)
+
+createButton("Прыжок -", extraTab, function()
+	jumpPower = math.max(10, jumpPower - 10)
+	LocalPlayer.Character.Humanoid.JumpPower = jumpPower
+end, 130)
+
+createButton("Fly", extraTab, function()
+	fly = not fly
+	if fly then
+		local bp = Instance.new("BodyPosition", LocalPlayer.Character.HumanoidRootPart)
+		bp.Name = "FlyForce"
+		bp.MaxForce = Vector3.new(100000, 100000, 100000)
+		RunService.RenderStepped:Connect(function()
+			if bp and bp.Parent then
+				bp.Position = LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(0, 5, 0)
+			end
+		end)
+	else
+		if LocalPlayer.Character.HumanoidRootPart:FindFirstChild("FlyForce") then
+			LocalPlayer.Character.HumanoidRootPart.FlyForce:Destroy()
+		end
+	end
+end, 170)
+
+createButton("Noclip", extraTab, function()
+	noclip = not noclip
+	RunService.Stepped:Connect(function()
+		if noclip and LocalPlayer.Character then
+			for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+				if v:IsA("BasePart") and v.CanCollide then
+					v.CanCollide = false
+				end
+			end
+		end
+	end)
+end, 210)
