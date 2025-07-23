@@ -97,7 +97,7 @@ circle.Thickness = 1
 circle.Color = Color3.fromRGB(255, 255, 255)
 circle.Radius = radius
 circle.Filled = false
-circle.Position = Vector2.new(500, 300) -- фиксированное положение
+circle.Position = Vector2.new(550, 300) -- фиксированное положение
 
 function getClosestTarget()
 	local closest = nil
